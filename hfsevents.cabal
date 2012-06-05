@@ -1,5 +1,5 @@
 name:                hfsevents
-version:             0.1
+version:             0.1.1
 synopsis:            File/folder watching for OS X
 homepage:            http://github.com/luite/hfsevents
 license:             BSD3
@@ -8,7 +8,12 @@ author:              Luite Stegeman
 maintainer:          stegeman@gmail.com
 category:            System
 build-type:          Simple
+extra-source-files:  cbits/c_fsevents.h
 cabal-version:       >=1.8
+
+source-repository head
+  type:     git
+  location: https://github.com/luite/hfsevents.git
 
 library
   exposed-modules: System.OSX.FSEvents

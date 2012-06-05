@@ -11,7 +11,7 @@ module System.OSX.FSEvents
   , eventFlagMustScanSubDirs, eventFlagUserDropped, eventFlagKernelDropped
   , eventFlagEventIdsWrapped, eventFlagHistoryDone, eventFlagRootChanged
   , eventFlagMount, eventFlagUnmount
-  -- item flags: enable file-level events to get these
+  -- item flags: enable file-level events to get these (OS X 10.7 and higher only)
   , eventFlagItemCreated, eventFlagItemRemoved, eventFlagItemInodeMetaMod
   , eventFlagItemRenamed, eventFlagItemModified, eventFlagItemFinderInfoMod
   , eventFlagItemChangeOwner, eventFlagItemXattrMod
