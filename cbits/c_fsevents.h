@@ -21,5 +21,9 @@ int createWatch ( char** folders
 
 int destroyWatch(watch* w);
 
+void osVersion( SInt32 *majorVersion
+              , SInt32 *minorVersion
+	      , SInt32 *bugFixVersion);
+
 #endif
 

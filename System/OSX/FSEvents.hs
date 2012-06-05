@@ -16,6 +16,8 @@ module System.OSX.FSEvents
   , eventFlagItemRenamed, eventFlagItemModified, eventFlagItemFinderInfoMod
   , eventFlagItemChangeOwner, eventFlagItemXattrMod
   , eventFlagItemIsFile, eventFlagItemIsDir, eventFlagItemIsSymlink
+  -- query api support
+  , fileLevelEventsSupported, osVersion
   ) where
 
 import Control.Concurrent
@@ -25,6 +27,7 @@ import Control.Monad
 import Data.Bits
 import Data.Serialize.Get
 import Data.Word
+import Data.Int
 import Foreign.C.String
 import Foreign.C.Types
 import Foreign.Marshal.Alloc
@@ -170,6 +173,18 @@ consumeMsgs h a = readEvents
       stop = hClose h >> return ()
       readHeader = liftM3 (,,) getWord64host getWord64host getWord64host
 
+osVersion :: IO (Integer, Integer, Integer)
+osVersion = alloca $ \major -> do
+            alloca $ \minor -> do
+            alloca $ \bugfix -> do
+              c_osVersion major minor bugfix
+              liftM3 (,,) (peekfi major) (peekfi minor) (peekfi bugfix)
+  where
+    peekfi = fmap fromIntegral . peek
+
+fileLevelEventsSupported :: IO Bool
+fileLevelEventsSupported = fmap (>= (10,7,0)) osVersion
+
 foreign import ccall safe "c_fsevents.h createWatch" c_createWatch :: Ptr (Ptr CChar)
                                                                    -> CInt
                                                                    -> Word32
@@ -181,4 +196,8 @@ foreign import ccall safe "c_fsevents.h createWatch" c_createWatch :: Ptr (Ptr C
 
 foreign import ccall safe "c_fsevents.h destroyWatch" c_destroyWatch :: Ptr CWatch
                                                                      -> IO ()
+foreign import ccall safe "c_fsevents.h osVersion" c_osVersion :: Ptr Int32
+                                                               -> Ptr Int32
+                                                               -> Ptr Int32
+                                                               -> IO ()
 

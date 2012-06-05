@@ -96,3 +96,8 @@ int destroyWatch(watch* w) {
   free(w);
 }
 
+void osVersion(SInt32 *majorVersion, SInt32 *minorVersion, SInt32 *bugFixVersion) {
+   Gestalt(gestaltSystemVersionMajor, majorVersion);
+   Gestalt(gestaltSystemVersionMinor, minorVersion);
+   Gestalt(gestaltSystemVersionBugFix, bugFixVersion);
+}
