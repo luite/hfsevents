@@ -31,6 +31,7 @@ void *watchRunLoop(void *vw) {
   w->runLoop = rl;
   FSEventStreamScheduleWithRunLoop(w->eventStream, rl, kCFRunLoopDefaultMode);
   FSEventStreamStart(w->eventStream);
+  pthread_mutex_unlock(&w->mut);
   CFRunLoopRun();
   pthread_exit(NULL);
 }
@@ -70,6 +71,8 @@ int createWatch( char** folders
     w->writefd = pfds[1];
     w->eventStream = es;
     w->runLoop = NULL;
+    pthread_mutex_init(&w->mut, NULL);
+    pthread_mutex_lock(&w->mut);
     pthread_create(&t, NULL, &watchRunLoop, (void*)w);
     *fd = pfds[0];
     *wp = w;
@@ -87,12 +90,15 @@ int createWatch( char** folders
 }
 
 int destroyWatch(watch* w) {
+  pthread_mutex_lock(&w->mut);
+  FSEventStreamStop(w->eventStream);
+  FSEventStreamInvalidate(w->eventStream);
+  CFRunLoopStop(w->runLoop);
+  CFRelease(w->runLoop);
   FSEventStreamRelease(w->eventStream);
-  if(w->runLoop != NULL) {
-    CFRunLoopStop(w->runLoop);
-    CFRelease(w->runLoop);
-  }
   close(w->writefd);
+  pthread_mutex_unlock(&w->mut);
+  pthread_mutex_destroy(&w->mut);
   free(w);
 }
 

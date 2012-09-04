@@ -2,11 +2,13 @@
 #define CBITS_C_FSEVENTS_H 1
 
 #include <CoreServices/CoreServices.h>
+#include <pthread.h>
 
 typedef struct {
   FSEventStreamRef eventStream;
   CFRunLoopRef runLoop;
   int writefd;
+  pthread_mutex_t mut;
 } watch;
 
 
