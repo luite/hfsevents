@@ -1,2 +1,10 @@
 Bindings for the OS X FSEvents API
 
+note:
+
+when running the following commands
+
+# echo "abc" > test.txt
+# echo "def" >> test.txt
+
+OS X 10.8 sometimes sets the `ItemCreated` flag for the second command
