@@ -1,5 +1,5 @@
 name:                hfsevents
-version:             0.1.3
+version:             0.1.4
 synopsis:            File/folder watching for OS X
 homepage:            http://github.com/luite/hfsevents
 license:             BSD3
@@ -22,7 +22,7 @@ library
   else
     buildable: False
   frameworks: Cocoa
-  C-sources: cbits/c_fsevents.c
+  C-sources: cbits/c_fsevents.m
   include-dirs: cbits
   extra-libraries: pthread
   build-depends:
