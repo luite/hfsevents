@@ -30,5 +30,6 @@ library
     bytestring,
     cereal >= 0.3 && < 0.4,
     unix,
+    mtl,
     text
 

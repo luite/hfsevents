@@ -24,6 +24,7 @@ import Control.Concurrent
 import Control.Concurrent.MVar
 import Control.Exception (bracket)
 import Control.Monad
+import Control.Monad.Cont
 import Data.Bits
 import Data.Serialize.Get
 import Data.Word
@@ -91,13 +92,12 @@ eventFlagItemIsDir = 0x00020000
 eventFlagItemIsSymlink :: Word64
 eventFlagItemIsSymlink = 0x00040000
 
-withCStrings :: [String] -> (Ptr (Ptr CChar) -> Int -> IO a) -> IO a
-withCStrings xss act = bracket alloc release (\p -> act p n)
-  where
-    n          = length xss
-    alloc      = mapM newCString xss >>= newArray
-    release pp = peekArray n pp >>= mapM_ free >> free pp
+nest :: [(r -> a) -> a] -> ([r] -> a) -> a
+nest xs = runCont (sequence (map cont xs))
 
+withCStringArray0 :: [String] -> (Ptr CString -> IO a) -> IO a
+withCStringArray0 strings act = nest (map withCString strings)
+                                     (\rs -> withArray0 nullPtr rs act)
 
 -- | Create an FSEvents watch for a list of paths.
 -- The callback action will be called for each event in the watched paths
@@ -113,11 +113,11 @@ eventStreamCreate :: [FilePath]      -- ^ The paths to watch
                   -> Bool            -- ^ Get file-level notifications instead of directory level 
                   -> (Event -> IO a) -- ^ The action to run when an event has taken place
                   -> IO EventStream  -- ^ The event stream, use this to destroy the stream
-eventStreamCreate ps latency nodefer noself filelevel a = withCStrings ps $ \pp n ->
+eventStreamCreate ps latency nodefer noself filelevel a = withCStringArray0 ps $ \pp ->
   alloca $ \pfd -> do
   alloca $ \ppw -> do
     when (latency < 0) $ ioError (userError "latency must be nonnegative")
-    r <- c_createWatch pp (fromIntegral n) flags 0 (realToFrac latency) pfd ppw
+    r <- c_createWatch pp (fromIntegral (length ps)) flags 0 (realToFrac latency) pfd ppw
     when (r /= 0) $ ioError (userError "could not create file system event stream")
     h <- fdToHandle . Fd =<< peek pfd
     pw <- peek ppw
