@@ -21,7 +21,7 @@ int createWatch ( char** folders
                 , void** wp
                 );
 
-int destroyWatch(watch* w);
+void destroyWatch(watch* w);
 
 void osVersion( SInt32 *majorVersion
               , SInt32 *minorVersion

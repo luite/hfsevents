@@ -89,7 +89,7 @@ int createWatch( char** folders
   return rv;
 }
 
-int destroyWatch(watch* w) {
+void destroyWatch(watch* w) {
   pthread_mutex_lock(&w->mut);
   FSEventStreamStop(w->eventStream);
   FSEventStreamInvalidate(w->eventStream);
