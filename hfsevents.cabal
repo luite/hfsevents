@@ -1,5 +1,5 @@
 name:                hfsevents
-version:             0.1.5
+version:             0.1.6
 synopsis:            File/folder watching for OS X
 homepage:            http://github.com/luite/hfsevents
 license:             BSD3
