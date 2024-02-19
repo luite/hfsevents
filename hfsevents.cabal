@@ -1,28 +1,29 @@
+cabal-version:       2.2
 name:                hfsevents
 version:             0.1.6
 synopsis:            File/folder watching for OS X
 homepage:            http://github.com/luite/hfsevents
-license:             BSD3
+license:             BSD-3-Clause
 license-file:        LICENSE
 author:              Luite Stegeman
 maintainer:          stegeman@gmail.com
 category:            System
 build-type:          Simple
 extra-source-files:  cbits/c_fsevents.h, test/test.hs, test/trace.hs
-cabal-version:       >=1.8
 
 source-repository head
   type:     git
   location: https://github.com/luite/hfsevents.git
 
 library
+  default-language: Haskell98
   exposed-modules: System.OSX.FSEvents
   if os(darwin)
     buildable: True
   else
     buildable: False
   frameworks: Cocoa
-  C-sources: cbits/c_fsevents.m
+  cxx-sources: cbits/c_fsevents.m
   include-dirs: cbits
   extra-libraries: pthread
   build-depends:
