@@ -74,6 +74,14 @@ int createWatch( char** folders
     pthread_mutex_init(&w->mut, NULL);
     pthread_mutex_lock(&w->mut);
     pthread_create(&t, NULL, &watchRunLoop, (void*)w);
+
+    // Wait for watchRunLoop to release the mutex.
+    // This way, we know it has finished calling FSEventStreamStart before we return.
+    // If not, we'd have a race condition where filesystem events from just after the watch
+    // creation could be missed.
+    pthread_mutex_lock(&w->mut);
+    pthread_mutex_unlock(&w->mut);
+
     *fd = pfds[0];
     *wp = w;
     rv = 0;
