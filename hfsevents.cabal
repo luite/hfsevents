@@ -1,6 +1,6 @@
 cabal-version:       2.2
 name:                hfsevents
-version:             0.1.7
+version:             0.1.8
 synopsis:            File/folder watching for OS X
 homepage:            http://github.com/luite/hfsevents
 license:             BSD-3-Clause
