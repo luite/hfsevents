@@ -5,6 +5,9 @@
 module System.OSX.FSEvents
   ( EventStream
   , eventStreamCreate
+  , eventStreamCreateSince
+  , eventIdSinceNow
+  , getCurrentEventId
   , eventStreamDestroy
   , Event (..)
   -- event callback flags
@@ -113,11 +116,24 @@ eventStreamCreate :: [FilePath]      -- ^ The paths to watch
                   -> Bool            -- ^ Get file-level notifications instead of directory level 
                   -> (Event -> IO a) -- ^ The action to run when an event has taken place
                   -> IO EventStream  -- ^ The event stream, use this to destroy the stream
-eventStreamCreate ps latency nodefer noself filelevel a = withCStringArray0 ps $ \pp ->
+eventStreamCreate ps = eventStreamCreateSince ps eventIdSinceNow
+
+-- | Like 'eventStreamCreate', but starts the stream from the given event ID rather than
+-- \"since now\". Supplying an ID means the stream replays the events after it and then sends a
+-- HistoryDone sentinel event, which marks the point from which events are live.
+eventStreamCreateSince :: [FilePath]      -- ^ The paths to watch
+                       -> Word64          -- ^ Event ID to start from; 'eventIdSinceNow' for only new events
+                       -> Double          -- ^ Latency
+                       -> Bool            -- ^ Process event immediately if no other events received for at least latency
+                       -> Bool            -- ^ Ignore events caused by current process
+                       -> Bool            -- ^ Get file-level notifications instead of directory level
+                       -> (Event -> IO a) -- ^ The action to run when an event has taken place
+                       -> IO EventStream  -- ^ The event stream, use this to destroy the stream
+eventStreamCreateSince ps since latency nodefer noself filelevel a = withCStringArray0 ps $ \pp ->
   alloca $ \pfd -> do
   alloca $ \ppw -> do
     when (latency < 0) $ ioError (userError "latency must be nonnegative")
-    r <- c_createWatch pp (fromIntegral (length ps)) flags 0 (realToFrac latency) pfd ppw
+    r <- c_createWatch pp (fromIntegral (length ps)) flags since (realToFrac latency) pfd ppw
     when (r /= 0) $ ioError (userError "could not create file system event stream")
     h <- fdToHandle . Fd =<< peek pfd
     pw <- peek ppw
@@ -193,6 +209,17 @@ foreign import ccall safe "c_fsevents.h createWatch" c_createWatch :: Ptr (Ptr C
                                                                    -> Ptr (CInt)
                                                                    -> Ptr (Ptr CWatch)
                                                                    -> IO CInt
+
+-- | Ask for events from now on, i.e. @kFSEventStreamEventIdSinceNow@. Note that Apple
+-- reserves 0 for \"the beginning of time\" instead.
+foreign import ccall unsafe "c_fsevents.h eventIdSinceNow" eventIdSinceNow :: Word64
+
+-- | The most recently generated event ID, system-wide. Pass this to
+-- 'eventStreamCreateSince' to start a stream without a gap.
+getCurrentEventId :: IO Word64
+getCurrentEventId = c_getCurrentEventId
+
+foreign import ccall safe "c_fsevents.h getCurrentEventId" c_getCurrentEventId :: IO Word64
 
 foreign import ccall safe "c_fsevents.h destroyWatch" c_destroyWatch :: Ptr CWatch
                                                                      -> IO ()

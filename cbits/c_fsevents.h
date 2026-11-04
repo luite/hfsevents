@@ -23,6 +23,10 @@ int createWatch ( char** folders
 
 void destroyWatch(watch* w);
 
+UInt64 eventIdSinceNow(void);
+
+UInt64 getCurrentEventId(void);
+
 void osVersion( SInt32 *majorVersion
               , SInt32 *minorVersion
 	      , SInt32 *bugFixVersion);
