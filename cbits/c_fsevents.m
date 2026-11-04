@@ -51,7 +51,6 @@ int createWatch( char** folders
   int pfds[2];
   if(n>MAX_WATCH_PATHS) return -1;
   if(pipe(pfds)) return -1;
-  if(!since) since = kFSEventStreamEventIdSinceNow;
   CFStringRef *cffolders = malloc(n * sizeof(CFStringRef));
   watch *w;
   w  = malloc(sizeof(watch));
@@ -108,6 +107,10 @@ void destroyWatch(watch* w) {
   pthread_mutex_unlock(&w->mut);
   pthread_mutex_destroy(&w->mut);
   free(w);
+}
+
+UInt64 eventIdSinceNow() {
+  return kFSEventStreamEventIdSinceNow;
 }
 
 UInt64 getCurrentEventId() {

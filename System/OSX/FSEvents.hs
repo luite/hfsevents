@@ -6,6 +6,7 @@ module System.OSX.FSEvents
   ( EventStream
   , eventStreamCreate
   , eventStreamCreateSince
+  , eventIdSinceNow
   , getCurrentEventId
   , eventStreamDestroy
   , Event (..)
@@ -115,13 +116,13 @@ eventStreamCreate :: [FilePath]      -- ^ The paths to watch
                   -> Bool            -- ^ Get file-level notifications instead of directory level 
                   -> (Event -> IO a) -- ^ The action to run when an event has taken place
                   -> IO EventStream  -- ^ The event stream, use this to destroy the stream
-eventStreamCreate ps = eventStreamCreateSince ps 0
+eventStreamCreate ps = eventStreamCreateSince ps eventIdSinceNow
 
 -- | Like 'eventStreamCreate', but starts the stream from the given event ID rather than
 -- \"since now\". Supplying an ID means the stream replays the events after it and then sends a
 -- HistoryDone sentinel event, which marks the point from which events are live.
 eventStreamCreateSince :: [FilePath]      -- ^ The paths to watch
-                       -> Word64          -- ^ Event ID to start from, or 0 for \"since now\"
+                       -> Word64          -- ^ Event ID to start from; 'eventIdSinceNow' for only new events
                        -> Double          -- ^ Latency
                        -> Bool            -- ^ Process event immediately if no other events received for at least latency
                        -> Bool            -- ^ Ignore events caused by current process
@@ -208,6 +209,10 @@ foreign import ccall safe "c_fsevents.h createWatch" c_createWatch :: Ptr (Ptr C
                                                                    -> Ptr (CInt)
                                                                    -> Ptr (Ptr CWatch)
                                                                    -> IO CInt
+
+-- | Ask for events from now on, i.e. @kFSEventStreamEventIdSinceNow@. Note that Apple
+-- reserves 0 for \"the beginning of time\" instead.
+foreign import ccall unsafe "c_fsevents.h eventIdSinceNow" eventIdSinceNow :: Word64
 
 -- | The most recently generated event ID, system-wide. Pass this to
 -- 'eventStreamCreateSince' to start a stream without a gap.
